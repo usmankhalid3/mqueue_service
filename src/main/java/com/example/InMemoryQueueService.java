@@ -40,6 +40,7 @@ public class InMemoryQueueService implements QueueService {
 				timeoutInvisibleMessages();
 			}
 		};
+		// invoke timeout checking task every 10ms
 		taskService.scheduleWithFixedDelay(task, 0, 10, TimeUnit.MILLISECONDS);
 	}
 	
@@ -112,6 +113,10 @@ public class InMemoryQueueService implements QueueService {
 	
 	public List<Message> getMessages() {
 		return Lists.newArrayList(queue);
+	}
+	
+	public List<Message> getInvisibleMessages() {
+		return Lists.newArrayList(invisibleMessages.values());
 	}
 	
 	private void timeoutInvisibleMessages() {
