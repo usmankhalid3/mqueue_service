@@ -1,8 +1,10 @@
 package com.example;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -17,6 +19,8 @@ import com.example.common.QueueConfig;
 import com.example.common.RetrievalRequest;
 import com.example.common.exceptions.InvalidRetrievalCountException;
 import com.example.common.exceptions.InvalidVisibilityTimeout;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class InMemoryQueueTest {
 
@@ -89,12 +93,44 @@ public class InMemoryQueueTest {
 	}
 
 	@Test
-	public void doesNotServeInvisibleMessages() {
+	public void doesNotServeInvisibleMessages1() {
 		queue.put("HelloWorld1");
 		Message sent2 = queue.put("HelloWorld2");
 		queue.pull(new RetrievalRequest(1)).get(0);
 		List<Message> messages = queue.getMessages();
 		assertEquals(messages.get(0).getBody(), sent2.getBody());
+	}
+	
+	@Test
+	public void doesNotServeInvisibleMessages2() {
+		int testSize = 5;
+		for (int i = 0; i < testSize; i++) {
+			queue.put("HelloWorld" + i);
+		}
+		List<String> firstAttempt  = Lists.newArrayList();
+		Set<String> secondAttempt = Sets.newHashSet();
+		boolean keepGoing = true;
+		for (int i = 0; i < testSize; i++) {
+			Message msg = queue.pull(new RetrievalRequest(1, 150)).get(0);
+			System.out.println(msg.getBody());
+			firstAttempt.add(msg.getBody());
+		}
+		System.out.println("------");
+		while(keepGoing) {
+			List<Message> messages = queue.pull(new RetrievalRequest(1));
+			if (!messages.isEmpty()) {
+				Message msg = messages.get(0);
+				System.out.println(msg.getBody());
+				secondAttempt.add(msg.getBody());
+				if (queue.size() == 0 && queue.getInvisibleMessages().size() == testSize) {
+					keepGoing = false;
+				}
+			}
+		}
+		assertEquals(firstAttempt.size(), secondAttempt.size());
+		for (int i = 0; i < testSize; i++) {
+			assertTrue(secondAttempt.contains(firstAttempt.get(i)));
+		}
 	}
 
 	@Test(expected = InvalidRetrievalCountException.class)
