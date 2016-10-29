@@ -19,7 +19,7 @@ public class MainFile {
 	}
 	
 	private static void testInMemory() {
-		QueueService service = new InMemoryQueueService("TestQueue1");
+		QueueService service = new InMemoryQueueService();
 		performTest(service);
 	}
 
@@ -34,7 +34,6 @@ public class MainFile {
 		String queueUrl =  sqs.createQueue(createQueueRequest).getQueueUrl();
 		System.out.println("Created queue: " + queueUrl);
 		QueueService service = new SqsQueueService(sqs, queueUrl);
-//		System.out.println(service.size());
 		performTest(service);
 	}
 	

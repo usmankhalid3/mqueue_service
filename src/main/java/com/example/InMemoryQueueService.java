@@ -20,14 +20,12 @@ import com.google.common.collect.Lists;
 
 public class InMemoryQueueService implements QueueService { 
 	
-	private String queueName;
 	private Object lock = new Object();
 	private Deque<Message> queue = new ArrayDeque<Message>();
 	private Map<String, Message> invisibleMessages = new HashMap<String, Message>();
 	private ScheduledExecutorService taskService = null;
 	
-	public InMemoryQueueService(String queueName) {
-		this.queueName = queueName;
+	public InMemoryQueueService() {
 		this.taskService = Executors.newScheduledThreadPool(1);
 		startTimeoutTask();
 	}
@@ -82,13 +80,11 @@ public class InMemoryQueueService implements QueueService {
 			List<Message> result = new ArrayList<Message>(resultSize);
 			for (int i = 0; i < resultSize; i++) {
 				Message msg = queue.pollFirst();
-				//if (msg != null) {
-					msg.setExpiryTime(request.getVisibilityTimeout());
-					String receiptHandle = Util.getRandomId();
-					invisibleMessages.put(receiptHandle, msg);
-					msg.setReceiptHandle(receiptHandle);
-					result.add(msg);
-				//}
+				msg.setExpiryTime(request.getVisibilityTimeout());
+				String receiptHandle = Util.getRandomId();
+				invisibleMessages.put(receiptHandle, msg);
+				msg.setReceiptHandle(receiptHandle);
+				result.add(msg);
 			}
 			return result;
 		}

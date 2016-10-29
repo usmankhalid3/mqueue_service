@@ -30,12 +30,11 @@ public class InMemoryQueueTest {
 
 	@BeforeClass
 	public static void setupQueue() {
-		queue = new InMemoryQueueService("TestQueue1");
+		queue = new InMemoryQueueService();
 	}
 
 	@AfterClass
 	public static void stopTimer() {
-		System.out.println("All Tests Executed, Stopping timer");
 		queue.stopTimeoutTask();
 	}
 
@@ -111,15 +110,12 @@ public class InMemoryQueueTest {
 		boolean keepGoing = true;
 		for (int i = 0; i < testSize; i++) {
 			Message msg = queue.pull(new RetrievalRequest(1, 150)).get(0);
-			System.out.println(msg.getBody());
 			firstAttempt.add(msg.getBody());
 		}
-		System.out.println("------");
 		while(keepGoing) {
 			List<Message> messages = queue.pull(new RetrievalRequest(1));
 			if (!messages.isEmpty()) {
 				Message msg = messages.get(0);
-				System.out.println(msg.getBody());
 				secondAttempt.add(msg.getBody());
 				if (queue.size() == 0 && queue.getInvisibleMessages().size() == testSize) {
 					keepGoing = false;
