@@ -3,7 +3,7 @@ package com.example.common;
 public class RetrievalRequest {
 
 	private int numberOfMessages;
-	private int visibilityTimeout;
+	private int visibilityTimeout; // in millis
 	
 	public RetrievalRequest() {
 		

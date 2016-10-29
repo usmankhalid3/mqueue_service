@@ -15,7 +15,6 @@ import org.junit.rules.Timeout;
 
 import com.example.common.Constants;
 import com.example.common.Message;
-import com.example.common.QueueConfig;
 import com.example.common.RetrievalRequest;
 import com.example.common.exceptions.InvalidRetrievalCountException;
 import com.example.common.exceptions.InvalidVisibilityTimeout;
@@ -31,7 +30,7 @@ public class InMemoryQueueTest {
 
 	@BeforeClass
 	public static void setupQueue() {
-		queue = new InMemoryQueueService(new QueueConfig("TestQueue1"));
+		queue = new InMemoryQueueService("TestQueue1");
 	}
 
 	@AfterClass

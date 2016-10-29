@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.example.common.Constants;
 import com.example.common.Message;
-import com.example.common.QueueConfig;
 import com.example.common.RetrievalRequest;
 import com.example.common.Util;
 import com.example.common.exceptions.InvalidRetrievalCountException;
@@ -21,14 +20,14 @@ import com.google.common.collect.Lists;
 
 public class InMemoryQueueService implements QueueService { 
 	
-	private QueueConfig config;
+	private String queueName;
 	private Object lock = new Object();
 	private Deque<Message> queue = new ArrayDeque<Message>();
 	private Map<String, Message> invisibleMessages = new HashMap<String, Message>();
 	private ScheduledExecutorService taskService = null;
 	
-	public InMemoryQueueService(QueueConfig config) {
-		this.config = config;
+	public InMemoryQueueService(String queueName) {
+		this.queueName = queueName;
 		this.taskService = Executors.newScheduledThreadPool(1);
 		startTimeoutTask();
 	}
@@ -67,8 +66,8 @@ public class InMemoryQueueService implements QueueService {
 
 	@Override
 	public List<Message> pull(RetrievalRequest request) {
-		int numMsgs = request.getNumberOfMessages();
-		if (!Util.existsInRange(numMsgs, 0, Constants.maxRetrievalCount)) {
+		int requestedMsgs = request.getNumberOfMessages();
+		if (!Util.existsInRange(requestedMsgs, 0, Constants.maxRetrievalCount)) {
 			throw new InvalidRetrievalCountException();
 		}
 		if (!Util.existsInRange(request.getVisibilityTimeout(), 0, Constants.maxVisibilityTimeout)) {
@@ -78,18 +77,18 @@ public class InMemoryQueueService implements QueueService {
 			return Lists.newArrayList();
 		}
 		synchronized (lock) {
-			int numExistingMessages = queue.size();
-			int resultSize = numMsgs > numExistingMessages ? numMsgs : numMsgs;
+			int existingMsgs = queue.size();
+			int resultSize = existingMsgs < requestedMsgs ? existingMsgs : requestedMsgs;
 			List<Message> result = new ArrayList<Message>(resultSize);
 			for (int i = 0; i < resultSize; i++) {
 				Message msg = queue.pollFirst();
-				if (msg != null) {
+				//if (msg != null) {
 					msg.setExpiryTime(request.getVisibilityTimeout());
 					String receiptHandle = Util.getRandomId();
 					invisibleMessages.put(receiptHandle, msg);
 					msg.setReceiptHandle(receiptHandle);
 					result.add(msg);
-				}
+				//}
 			}
 			return result;
 		}
@@ -105,10 +104,6 @@ public class InMemoryQueueService implements QueueService {
 	@Override
 	public int size() {
 		return queue.size(); 
-	}
-	
-	public String getName() {
-		return config.getQueueName();
 	}
 	
 	public List<Message> getMessages() {
