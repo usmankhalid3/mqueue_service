@@ -11,7 +11,7 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.example.common.Message;
 import com.example.common.RetrievalRequest;
 
-public class MainFile {
+public class TestFile {
 
 	public static void main(String[] args) {
 		testInMemory();
