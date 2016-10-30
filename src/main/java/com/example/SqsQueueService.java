@@ -1,6 +1,7 @@
 package com.example;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -39,7 +40,7 @@ public class SqsQueueService implements QueueService {
 	public List<Message> pull(RetrievalRequest request) {
 		ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
 		receiveMessageRequest.setMaxNumberOfMessages(request.getNumberOfMessages());
-		receiveMessageRequest.setVisibilityTimeout(request.getVisibilityTimeout() / 1000);
+		receiveMessageRequest.setVisibilityTimeout((int)TimeUnit.MILLISECONDS.toSeconds(request.getVisibilityTimeout()));
 		List<com.amazonaws.services.sqs.model.Message> sqsMessages = sqs.receiveMessage(receiveMessageRequest).getMessages();
 		List<Message> result = Lists.newArrayList();
 		for (com.amazonaws.services.sqs.model.Message sqsMessage : sqsMessages) {
