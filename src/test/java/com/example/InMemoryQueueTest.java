@@ -18,6 +18,7 @@ import com.example.common.Message;
 import com.example.common.RetrievalRequest;
 import com.example.common.exceptions.InvalidRetrievalCountException;
 import com.example.common.exceptions.InvalidVisibilityTimeout;
+import com.example.common.exceptions.MessageNotInvisibleException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -68,7 +69,7 @@ public class InMemoryQueueTest {
 		assertEquals(0, queue.size());
 	}
 
-	@Test
+	@Test(expected = MessageNotInvisibleException.class)
 	public void testInvalidReceipt() {
 		queue.put("HelloWorld");
 		queue.delete("invalidreceipt");

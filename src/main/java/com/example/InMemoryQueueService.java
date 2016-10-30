@@ -16,6 +16,7 @@ import com.example.common.RetrievalRequest;
 import com.example.common.Util;
 import com.example.common.exceptions.InvalidRetrievalCountException;
 import com.example.common.exceptions.InvalidVisibilityTimeout;
+import com.example.common.exceptions.MessageNotInvisibleException;
 import com.google.common.collect.Lists;
 
 public class InMemoryQueueService implements QueueService { 
@@ -75,6 +76,8 @@ public class InMemoryQueueService implements QueueService {
 			return Lists.newArrayList();
 		}
 		synchronized (lock) {
+			//TODO impl the ability to wait for a certain time before returning
+			// in case the queue contains less elements than requested
 			int existingMsgs = queue.size();
 			int resultSize = existingMsgs < requestedMsgs ? existingMsgs : requestedMsgs;
 			List<Message> result = new ArrayList<Message>(resultSize);
@@ -93,6 +96,9 @@ public class InMemoryQueueService implements QueueService {
 	@Override
 	public void delete(String receiptHandle) {
 		synchronized (lock) {
+			if (!invisibleMessages.containsKey(receiptHandle)) {
+				throw new MessageNotInvisibleException();
+			}
 			invisibleMessages.remove(receiptHandle);
 		}
 	}
