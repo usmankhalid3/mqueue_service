@@ -3,8 +3,12 @@ package com.example;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -148,5 +152,54 @@ public class InMemoryQueueTest {
 		queue.pull(new RetrievalRequest(1));
 		assertEquals(queue.size(), 0);
 		assertEquals(queue.numberOfInvisibleMessages(), 1);
+	}
+	
+	@Test
+	public void multiThreadPutPull() {
+		int numThreads = 9;
+		int numIterations = 10;
+		ExecutorService service = Executors.newFixedThreadPool(numThreads);
+		List<Callable<Object>> threads = new ArrayList<Callable<Object>>(numThreads);
+		for (int i = 1; i <= numThreads; i++) {
+			threads.add(Executors.callable(new PutTask(i, numIterations)));
+		}
+		
+		try {
+			service.invokeAll(threads);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		
+		List<String> result = Lists.newArrayList();
+		while(queue.size() > 0) {
+			List<Message> messages = queue.pull(new RetrievalRequest(10, 100000));
+			for (Message msg : messages) {
+				result.add(msg.getBody());
+			}
+		}
+		
+		assertEquals(numThreads * numIterations, result.size());
+		for (int i = 10; i <= 99; i++) {
+			assertTrue(result.contains(String.valueOf(i)));
+		}
+	}
+	
+	private static class PutTask implements Runnable {
+
+		int threadNumber;
+		int numIterations;
+		
+		public PutTask(int threadNumber, int numIterations) {
+			this.threadNumber = threadNumber;
+			this.numIterations = numIterations;
+		}
+
+		@Override
+		public void run() {
+			for (int i = 0; i < numIterations; i++) {
+				queue.put(String.valueOf(threadNumber) + i);
+			}
+		}
+
 	}
 }
